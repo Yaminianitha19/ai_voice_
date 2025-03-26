@@ -1,6 +1,6 @@
 "use server";
+import { adminAuth, db } from "@/firebase/admin";
 
-import { auth, db } from "@/firebase/admin";
 import { cookies } from "next/headers";
 
 // Session duration (1 week)
@@ -11,7 +11,7 @@ export async function setSessionCookie(idToken: string) {
   const cookieStore = await cookies();
 
   // Create session cookie
-  const sessionCookie = await auth.createSessionCookie(idToken, {
+  const sessionCookie = await adminAuth.createSessionCookie(idToken, {
     expiresIn: SESSION_DURATION * 1000, // milliseconds
   });
 
@@ -71,7 +71,7 @@ export async function signIn(params: SignInParams) {
   const { email, idToken } = params;
 
   try {
-    const userRecord = await auth.getUserByEmail(email);
+    const userRecord = await adminAuth.getUserByEmail(email);
     if (!userRecord)
       return {
         success: false,
@@ -104,7 +104,10 @@ export async function getCurrentUser(): Promise<User | null> {
   if (!sessionCookie) return null;
 
   try {
-    const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
+    const decodedClaims = await adminAuth.verifySessionCookie(
+      sessionCookie,
+      true
+    );
 
     // get user info from db
     const userRecord = await db
