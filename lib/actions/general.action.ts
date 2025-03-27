@@ -5,6 +5,13 @@ import { google } from "@ai-sdk/google";
 
 import { db } from "@/firebase/admin";
 import { feedbackSchema } from "@/constants";
+import {
+  Interview,
+  Feedback,
+  CreateFeedbackParams,
+  GetFeedbackByInterviewIdParams,
+  GetLatestInterviewsParams,
+} from "@/types/interview";
 
 export async function createFeedback(params: CreateFeedbackParams) {
   const { interviewId, userId, transcript, feedbackId } = params;
@@ -93,33 +100,48 @@ export async function getFeedbackByInterviewId(
 export async function getLatestInterviews(
   params: GetLatestInterviewsParams
 ): Promise<Interview[] | null> {
-  const { userId, limit = 20 } = params;
+  try {
+    const { userId, limit = 20 } = params;
 
-  const interviews = await db
-    .collection("interviews")
-    .orderBy("createdAt", "desc")
-    .where("finalized", "==", true)
-    .where("userId", "!=", userId)
-    .limit(limit)
-    .get();
+    const interviews = await db
+      .collection("interviews")
+      .orderBy("createdAt", "desc")
+      .where("finalized", "==", true)
+      .where("userId", "!=", userId)
+      .limit(limit)
+      .get();
 
-  return interviews.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  })) as Interview[];
+    return interviews.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as Interview[];
+  } catch (error) {
+    console.error("Error fetching latest interviews:", error);
+    return null;
+  }
 }
 
 export async function getInterviewsByUserId(
   userId: string
 ): Promise<Interview[] | null> {
-  const interviews = await db
-    .collection("interviews")
-    .where("userId", "==", userId)
-    .orderBy("createdAt", "desc")
-    .get();
+  try {
+    const interviews = await db
+      .collection("interviews")
+      .where("userId", "==", userId)
+      .get();
 
-  return interviews.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  })) as Interview[];
+    return interviews.docs
+      .map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }))
+      .sort((a, b) => {
+        const dateA = new Date(a.createdAt || 0);
+        const dateB = new Date(b.createdAt || 0);
+        return dateB.getTime() - dateA.getTime();
+      }) as Interview[];
+  } catch (error) {
+    console.error("Error fetching interviews:", error);
+    return null;
+  }
 }

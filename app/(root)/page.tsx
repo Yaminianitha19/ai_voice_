@@ -11,84 +11,108 @@ import {
 } from "@/lib/actions/general.action";
 
 async function Home() {
-  const user = await getCurrentUser();
+  try {
+    const user = await getCurrentUser();
 
-  const [userInterviews, allInterview] = await Promise.all([
-    getInterviewsByUserId(user?.id!),
-    getLatestInterviews({ userId: user?.id! }),
-  ]);
+    if (!user) {
+      return (
+        <section className="card-cta">
+          <div className="flex flex-col gap-6 max-w-lg">
+            <h2>Get Interview-Ready with AI-Powered Practice & Feedback</h2>
+            <p className="text-lg">
+              Practice real interview questions & get instant feedback
+            </p>
 
-  const hasPastInterviews = userInterviews?.length! > 0;
-  const hasUpcomingInterviews = allInterview?.length! > 0;
+            <div className="flex gap-4">
+              <Button asChild className="btn-primary max-sm:w-full">
+                <Link href="/sign-in">Sign In</Link>
+              </Button>
+              <Button asChild variant="outline" className="max-sm:w-full">
+                <Link href="/sign-up">Sign Up</Link>
+              </Button>
+            </div>
+          </div>
 
-  return (
-    <>
-      <section className="card-cta">
-        <div className="flex flex-col gap-6 max-w-lg">
-          <h2>Get Interview-Ready with AI-Powered Practice & Feedback</h2>
-          <p className="text-lg">
-            Practice real interview questions & get instant feedback
-          </p>
+          <Image
+            src="/robot.png"
+            alt="robo-dude"
+            width={400}
+            height={400}
+            className="max-sm:hidden"
+          />
+        </section>
+      );
+    }
 
-          <Button asChild className="btn-primary max-sm:w-full">
-            <Link href="/interview">Start an Interview</Link>
-          </Button>
-        </div>
+    const [userInterviews, allInterviews] = await Promise.all([
+      getInterviewsByUserId(user.id),
+      getLatestInterviews({ userId: user.id }),
+    ]);
 
-        <Image
-          src="/robot.png"
-          alt="robo-dude"
-          width={400}
-          height={400}
-          className="max-sm:hidden"
-        />
-      </section>
+    const hasPastInterviews = userInterviews?.length > 0;
+    const hasUpcomingInterviews = allInterviews?.length > 0;
 
-      <section className="flex flex-col gap-6 mt-8">
-        <h2>Your Interviews</h2>
+    return (
+      <>
+        <section className="card-cta">
+          <div className="flex flex-col gap-6 max-w-lg">
+            <h2>Get Interview-Ready with AI-Powered Practice & Feedback</h2>
+            <p className="text-lg">
+              Practice real interview questions & get instant feedback
+            </p>
 
-        <div className="interviews-section">
-          {hasPastInterviews ? (
-            userInterviews?.map((interview) => (
-              <InterviewCard
-                key={interview.id}
-                userId={user?.id}
-                interviewId={interview.id}
-                role={interview.role}
-                type={interview.type}
-                techstack={interview.techstack}
-                createdAt={interview.createdAt}
-              />
-            ))
-          ) : (
-            <p>You haven&apos;t taken any interviews yet</p>
-          )}
-        </div>
-      </section>
+            <Button asChild className="btn-primary max-sm:w-full">
+              <Link href="/interview">Start an Interview</Link>
+            </Button>
+          </div>
 
-      <section className="flex flex-col gap-6 mt-8">
-        <h2>Take Interviews</h2>
+          <Image
+            src="/robot.png"
+            alt="robo-dude"
+            width={400}
+            height={400}
+            className="max-sm:hidden"
+          />
+        </section>
 
-        <div className="interviews-section">
-          {hasUpcomingInterviews ? (
-            allInterview?.map((interview) => (
-              <InterviewCard
-                key={interview.id}
-                userId={user?.id}
-                interviewId={interview.id}
-                role={interview.role}
-                type={interview.type}
-                techstack={interview.techstack}
-                createdAt={interview.createdAt}
-              />
-            ))
-          ) : (
-            <p>There are no interviews available</p>
-          )}
-        </div>
-      </section>
-    </>
-  );
+        <section className="flex flex-col gap-6 mt-8">
+          <h2>Your Interviews</h2>
+
+          <div className="interviews-section">
+            {hasPastInterviews ? (
+              userInterviews?.map((interview) => (
+                <InterviewCard key={interview.id} interview={interview} />
+              ))
+            ) : (
+              <p>No interviews yet. Start your first interview!</p>
+            )}
+          </div>
+        </section>
+
+        <section className="flex flex-col gap-6 mt-8">
+          <h2>Latest Interviews</h2>
+
+          <div className="interviews-section">
+            {hasUpcomingInterviews ? (
+              allInterviews?.map((interview) => (
+                <InterviewCard key={interview.id} interview={interview} />
+              ))
+            ) : (
+              <p>No interviews available.</p>
+            )}
+          </div>
+        </section>
+      </>
+    );
+  } catch (error) {
+    console.error("Error in Home page:", error);
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
+        <h2 className="text-2xl font-bold">Something went wrong</h2>
+        <p className="text-gray-600">Please try again later</p>
+      </div>
+    );
+  }
 }
 
 export default Home;

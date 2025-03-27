@@ -1,6 +1,6 @@
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-
+import { getFirestore } from "firebase/firestore";
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -12,5 +12,7 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase Client SDK
-const app = initializeApp(firebaseConfig);
-export const clientAuth = getAuth(app);
+const app = !getApps().length ? initializeApp(firebaseConfig):getApp();
+
+export const auth = getAuth(app);
+export const db = getFirestore(app);
